@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using igf.DataAccessLayer.Contracts;
-using igf.DependencyInterface;
-using igf.Utility;
+using namespace.DataAccessLayer.Contracts;
+using namespace.DependencyInterface;
+using namespace.Utility;
 using SQLite;
 using Xamarin.Forms;
 
-namespace igf.DataAccessLayer
+namespace namespace.DataAccessLayer
 {
     public class DatabaseHandler
     {
