@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using igf.DataAccessLayer.Contracts;
-using igf.Utility;
+using namespace.DataAccessLayer.Contracts;
+using namespace.Utility;
 using SQLite;
 
-namespace igf.DataAccessLayer
+namespace xx.DataAccessLayer
 {
     public class DownloadHandler
     {
