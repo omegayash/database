@@ -1,7 +1,7 @@
 ﻿using System;
 using SQLite;
 
-namespace igf.DataAccessLayer.Contracts
+namespace xx.DataAccessLayer.Contracts
 {
     public abstract class NumericKeyBase : INumericKey
     {
