@@ -1,5 +1,5 @@
 ﻿using System;
-namespace igf.DataAccessLayer.Contracts
+namespace xx.DataAccessLayer.Contracts
 {
     public interface INumericKey
     {
