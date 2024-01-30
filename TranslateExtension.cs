@@ -2,7 +2,7 @@
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
-namespace MobileApplicationOFRA.MultiLanguage
+namespace namespace
 {
     [ContentProperty("Text")]
     public class TranslateExtension : IMarkupExtension
