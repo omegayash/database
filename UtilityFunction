@@ -1,0 +1,823 @@
+public static class UtilityFunction
+    {
+        #region Variables
+        private static ClaimModel ClaimModelObject ;
+        static string TimeStamp = "0";
+
+        #endregion
+
+        public delegate void OncompleteCallBack(object result, bool status);
+
+        public static double ConvertToUnixTimestamp(DateTime date)
+        {
+            DateTime origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            DateTime dateTimeIST = date.AddHours(0).AddMinutes(0);
+            TimeSpan diff = dateTimeIST.ToUniversalTime() - origin;
+            return Math.Floor(diff.TotalSeconds);
+        }
+
+        public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            // Unix timestamp is seconds past epoch
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+            return dtDateTime;//.AddHours(5).AddMinutes(30);
+        }
+        public static bool isNetworkConnected()
+        {
+            bool isOnline = false;
+
+            if (CrossConnectivity.Current.IsConnected)
+            {
+                isOnline = true;
+            }
+            return isOnline;
+        }
+        public static string GetApplicationKey()
+        {
+            string applicationKey = string.Empty;
+            try
+            {
+                var getdata = DatabaseHandler.DbInstance.getItems<Model.Configuration>();
+
+                if (getdata?.Count != 0)
+                {
+
+                    foreach (var data in getdata)
+                    {
+                        applicationKey = data.ApplicationKey;
+                    }
+
+                }
+                else
+                {
+                    applicationKey = "";
+
+                }
+                return applicationKey;
+            }
+
+            catch
+            {
+                throw;
+            }
+            finally { }
+        }
+        public static bool IsvalidResponse(string text)
+        {
+            bool error = false;
+
+            foreach (var data in Constant.ResponseField)
+            {
+                if (text.Contains(data.ToString()))
+                {
+                    error = true;
+                }
+            }
+            return error;
+        }
+        public static string GetJsonRequest(string InputData)
+        {
+            var WrapperObj = new WrapperRequestJson();
+            WrapperObj.request_value = InputData;
+            return JsonConvert.SerializeObject(WrapperObj);
+        }
+        public static string GetAccessToken()
+        {
+            string accessToken = string.Empty;
+            try
+            {
+                var getdata = DatabaseHandler.DbInstance.getItems<Model.Configuration>();
+
+                if (getdata?.Count != 0)
+                {
+
+                    foreach (var data in getdata)
+                    {
+                        accessToken = data.AccessToken;
+                    }
+
+                }
+                else
+                {
+                    accessToken = "";
+
+                }
+                return accessToken;
+            }
+
+            catch
+            {
+                throw;
+            }
+            finally { }
+        }
+
+        /// <summary>
+        /// Creates the database.
+        /// </summary>
+        public static void CreateDatabase()
+        {
+            try
+            {
+                string[] m_strTableName = new string[]
+                {
+                    "MobileApplicationOFRA.Model.ClaimModel",
+					"MobileApplicationOFRA.Model.LoginModule.ApplicationAuth",
+					"MobileApplicationOFRA.Model.Configuration",
+                     "MobileApplicationOFRA.Model.StatusModel",
+                     "MobileApplicationOFRA.Model.UserProfile",
+                     "MobileApplicationOFRA.Model.MultilanguageModel.ResourceBundle",
+                      "MobileApplicationOFRA.Model.FormADetailModel",
+                      "MobileApplicationOFRA.Model.FormBDetailModel",
+                      "MobileApplicationOFRA.Model.FormCDetailModel",
+                      "MobileApplicationOFRA.Model.AttachmentFileModel",
+                     "MobileApplicationOFRA.Model.StatusDetails",
+                };
+                ///Database creation
+                DatabaseHandler.DbInstance.CreateDatabase(m_strTableName);
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
+        public static object GetLockerObject()
+        {
+            var locker = new object();
+            return locker;
+        }
+        public static string GetiPhoneDevice()
+        {
+            string iPhoneDevice = string.Empty;
+            double deviceHeight = 0;
+
+            try
+            {
+                deviceHeight = App.ScreenHeight;
+
+                switch (deviceHeight.ToString())
+                {
+
+                    case "568":
+                        iPhoneDevice = Constant.IphoneDevices.Iphone_5s.ToString();
+
+                        break;
+
+                    case "667":
+                        iPhoneDevice = Constant.IphoneDevices.Iphone_6.ToString();
+                        break;
+
+                    case "736":
+                        iPhoneDevice = Constant.IphoneDevices.Iphone_6Plus.ToString();
+                        break;
+
+                    case "812":
+                        iPhoneDevice = Constant.IphoneDevices.IphoneX.ToString();
+                        break;
+
+                }
+
+
+                return iPhoneDevice;
+            }
+            catch
+            {
+                throw;
+            }
+            finally { }
+        }
+
+
+        public static Guid UuidCreateSequential()
+        {
+            var uuid = Guid.NewGuid();
+            return uuid;
+        }
+        /// <summary>
+        /// Toasts message for android and ios.
+        /// </summary>
+        /// <param name="Message">Message.</param>
+        public static void ToastMessage(string Message)
+        {
+           
+
+            switch (Message)
+            {
+                case Constant.NoInternet:
+                    //Message = Constant.NoInternetConnection;
+                     Message = UtilityFunction.GetLanguageTextByCode(Constant.InternetConnection);
+                    if (Message.Contains(Constant.InternetConnection))
+                    {
+                        Message = "Please Check Internet Connection.";
+                    }
+                    break;
+
+                
+
+            }
+            ToastConfig toast = new ToastConfig(Message);
+            toast.SetDuration(3000);
+            toast.SetBackgroundColor(System.Drawing.Color.DimGray);
+            UserDialogs.Instance.Toast(toast);
+
+        }
+
+        public static async Task<bool> CheckConnection()
+        {
+            return await CrossConnectivity.Current.IsReachable("www.google.com", 5000);
+        }
+        public static async Task<bool> CheckInternetSpeed()
+        {
+            //Task.Run(async () =>
+            //{
+            try
+            {
+                /**/
+                if (await NetworkConnectivity.isConnectionAvailable())
+                {
+                    DateTime startTime = DateTime.Now;
+
+                    var client = new HttpClient();
+                    client.Timeout = new TimeSpan(0, 0, 10);
+                    var cancelSource = new CancellationTokenSource();
+                    var content = client.GetAsync("https://www.google.com", cancelSource.Token);
+                    DateTime endTime = DateTime.Now;
+                    if (Task.WaitAny(new Task[] { content }, 10000) < 0)
+                    {
+                        cancelSource.Cancel(); // attempt to cancel the HTTP request
+                        throw new Exception("The network request timed out. Please check your network connection.");
+                    }
+                    var contentdata = content.GetAwaiter().GetResult().Content.ReadAsStringAsync();
+                    var SpeedKb = Math.Round((contentdata.Result.Length / 1024) / (endTime - startTime).TotalSeconds, 2);
+                    if (SpeedKb < 10)
+                    {
+                        //Device.BeginInvokeOnMainThread(() =>
+                        //{
+                        //    UtilityFunction.ToastMessage(SpeedKb + " Kb/s" + " Slow internet speed " + (endTime - startTime).TotalSeconds);
+
+                        //});
+                        return false;
+                    }
+                    else
+                    {
+                        //Device.BeginInvokeOnMainThread(() =>
+                        //{
+                        //    UtilityFunction.ToastMessage(SpeedKb + " Kb/s" + " Good internet speed " + (endTime - startTime).TotalSeconds);
+                        //});
+                        return true;
+                    }
+
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                UtilityFunction.ToastMessage("Bad internet connection");
+                return false;
+            }
+            //});
+
+           
+
+            // Create Object Of WebClient
+            //using (var client = new HttpClient())
+            //{
+            //    //using (var stream = client.o("http://www.google.com/"))
+            //    //{
+            //    //    //Number Of Bytes Downloaded Are Stored In ‘data’
+            //    //    byte[] data = client.DownloadData("http://www.google.com/");
+            //    //    //DateTime Variable To Store Download End Time.
+            //    //    DateTime dt2 = DateTime.Now;
+
+            //    //    //To Calculate Speed in Kb Divide Value Of data by 1024 And Then by End Time Subtract Start Time To Know Download Per Second.
+            //    //    return Math.Round((data.Length / 1024) / (dt2 - dt1).TotalSeconds, 2);
+            //    //}
+            //}
+        }
+        public static SQLiteConnection CreateDbConnection()
+        {
+            SQLiteConnection objDbConnection = null;
+            //objDbConnection = new SQLiteConnection((SQLite.Net.Interop.ISQLitePlatform)(m_objSqlitePlateform), m_strConnectionString);
+            objDbConnection = DependencyService.Get<ISQLite>().GetConnection();
+            objDbConnection.BusyTimeout = new TimeSpan(6000);
+            //  objDbConnection = new SQLiteConnection(m_strConnectionString);
+            return objDbConnection;
+        }
+        public static async Task GetResultResourceBundle()
+        {
+            DownloadHandler languageDatabaseObject = new DownloadHandler();
+            try
+            {
+                Dictionary<string, string> hash = new Dictionary<string, string>();
+                RequestModel<Dictionary<string, string>> requestModel = new RequestModel<Dictionary<string, string>>();
+                RequsetServiceInfo<Dictionary<string, string>> requsetServiceInfo = new RequsetServiceInfo<Dictionary<string, string>>();
+                hash.Add("languageID", App.LangID);
+                hash.Add("TimeStamp", System.DateTime.Now.ToString());
+                requestModel.request_data = hash;
+                requsetServiceInfo.data = requestModel;
+
+                var data = JsonConvert.SerializeObject(requsetServiceInfo);
+
+                var LanguageListJson = await new MultiLanguageService().GetLanguageResource(data);
+                if (LanguageListJson.Contains("label_list"))
+                {
+                    ResponseServiceInfo<LanguagePageServiceOutputInfo> responseServiceInfo = new ResponseServiceInfo<LanguagePageServiceOutputInfo>();
+                    responseServiceInfo = JsonConvert.DeserializeObject<ResponseServiceInfo<LanguagePageServiceOutputInfo>>(LanguageListJson);
+                    var languageDataList = responseServiceInfo.data.body.label_list;
+                    if (languageDataList != null)
+                    {
+                        foreach (var item in languageDataList)
+                        {
+
+                            var result = await languageDatabaseObject.saveItemLanguage<Model.MultilanguageModel.ResourceBundle>(item);
+                        }
+
+
+                      //  IsDownload = true;
+                    }
+                    else
+                    {
+                      //  UtilityFunction.ToastMessage("No Data Available");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //IsDownload = false;
+                Device.BeginInvokeOnMainThread(async () =>
+                {
+                    UserDialogs.Instance.HideLoading();
+                  UtilityFunction.ToastMessage(ex.Message);
+
+                });
+            }
+
+        }       
+
+        public static async Task<double> GetServerTime()
+        {
+            if (await UtilityFunction.CheckConnection())
+            {
+                var StringData = await new CommunicationService().GetServerTime();
+
+                CrossSettings.Current.AddOrUpdateValue("ServerTimespan", Convert.ToDouble(StringData));
+                return Convert.ToDouble(StringData);
+            }
+            else
+            {
+                return CrossSettings.Current.GetValueOrDefault("ServerTimespan", 0);
+            }
+        }
+
+        public static async Task<string> GetLanguageList()
+        {
+            try
+            {
+                var timespan = CrossSettings.Current.GetValueOrDefault("MultiLanguageTimespan", "0");
+                //var InputData = "/" + timespan;
+                var InputData = timespan.ToString();
+                MasterLanguageInfo languages = new MasterLanguageInfo();
+                string JsonData = await new MultiLanguageService().GetUpdatedLanguages(InputData);
+                languages = JsonConvert.DeserializeObject<MasterLanguageInfo>(JsonData);
+
+                foreach (var data in languages.masterLanguages)
+                {
+
+                    await new DownloadHandler().saveLanguageList<MasterLanguage>(data);
+                }
+                return "success";
+            }
+            catch (Exception ex)
+            {
+                return "failed";
+
+            }
+
+
+        }
+        public static string GetLanguageTextByCode(string text)
+        {
+            text = L18n.Localize(text, App.LangID);
+            return text;
+        }
+        //public static async Task<int> GetMessageList()
+        //{
+
+        //}
+        public static string GetErrorMessage(string text)
+        {
+            string error = string.Empty;
+            switch (text)
+            {
+                //case Constant.NoInternet:
+                //    error = UtilityFunction.GetLanguageTextByCode(Constant.NoInternetConnection);
+                //    break;
+
+                //case Constant.NoRESPONSE:
+                //    error = UtilityFunction.GetLanguageTextByCode(Constant.NoRESPONSEMSG);
+                //    break;
+
+                default:
+                    error = text;
+                    break;
+            }
+            return error;
+        }
+
+        public static DateTime GetDateZeroTime(DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, date.Day, 0, 0, 0);
+        }
+
+
+        public static ImageSource convertBase64(string base64string)
+        {
+            ImageSource ImgSource;
+            try
+            {
+               
+                if (base64string != null && base64string != string.Empty)
+                {
+                    byte[] bytes = Convert.FromBase64String(base64string);
+                    using (MemoryStream ms = new MemoryStream(bytes))
+                    {
+                        ImgSource = ImageSource.FromStream(() => new MemoryStream(ms.ToArray()));
+                    }
+                }
+                else
+                {
+                    ImgSource = Constant.DefaultProfileImage;
+                }
+            }
+            catch (Exception ex) { ImgSource = Constant.DefaultProfileImage; }
+            return ImgSource;
+        }
+
+        public static string NoDataStringHandler(string dataString)
+        {
+            if (dataString != null && dataString != string.Empty)
+            {
+                return dataString;
+            }
+            else
+            {
+                dataString = UtilityFunction.GetLanguageTextByCode(Constant.NoDataMessage);
+                return dataString;
+            }
+
+        }
+        #region Sync
+        public static async Task SyncPage()
+        {
+            Int64 TotalCount = 50;
+            int Pager = 50;
+            
+          
+            if (CrossSettings.Current.Contains("TimeStamp"))
+            {
+                TimeStamp = CrossSettings.Current.GetValueOrDefault("TimeStamp", "0");
+            }
+            
+            
+            try
+            {
+                do { 
+                  
+                Dictionary<string, string> SyncClaimsObject = new Dictionary<string, string>();
+
+                SyncClaimsObject.Add("TimeStamp", TimeStamp);
+                SyncClaimsObject.Add("pager",Convert.ToString(Pager));
+
+                RequestModel<Dictionary<string, string>> RequestModel = new RequestModel<Dictionary<string, string>>();
+                RequsetServiceInfo<Dictionary<string, string>> RequestServiceInfo = new RequsetServiceInfo<Dictionary<string, string>>();
+
+                RequestModel.request_data = SyncClaimsObject;
+                RequestServiceInfo.data = RequestModel;
+                var JsonString = JsonConvert.SerializeObject(RequestServiceInfo);
+              
+                ClaimModelObject = new ClaimModel();
+
+                #region get all service data for claims reference to all forms(i.e Form- A,B,C) 
+                var ClaimsJsonData = await new ClaimsService().ClaimListService(JsonString);
+
+                    #endregion
+                
+                #region service data consumption
+
+                    if (ClaimsJsonData.Contains("Form A") && ClaimsJsonData != null)
+                {
+                    var ClaimFormJsonObject = JsonConvert.DeserializeObject<ResponseServiceInfo<ClaimsServiceInfoModel>>(ClaimsJsonData);
+
+                    TotalCount =Convert.ToInt32(ClaimFormJsonObject.data.body.TotalModuleCount);
+
+                    if (ClaimFormJsonObject.data != null && ClaimFormJsonObject.data.body != null)
+                    {
+                        #region Form A data consumption 
+                        if (ClaimFormJsonObject.data.body.FormA != null)
+                        {
+                            if (ClaimFormJsonObject.data.body.FormA.FormAList != null)
+                            {
+                              var  ClaimsJsonDataString = JObject.Parse(ClaimsJsonData);
+                                var Jobj = ClaimsJsonDataString["data"];
+                               var ClaimsJsonDataResult = Jobj["body"]["Form A"]["StatusLabel"].ToString();
+                                TotalCount =Convert.ToInt64( Jobj["body"]["TotalModuleCount"]);
+                                CrossSettings.Current.AddOrUpdateValue("StatusA", ClaimsJsonDataResult);
+                                    lock (ClaimFormJsonObject.data.body.FormA.FormAList)
+                                    {
+                                        foreach (var claimsData in ClaimFormJsonObject.data.body.FormA.FormAList)
+                                        {
+                                            ClaimModelObject.FormType = Constant.FormAText;
+                                            ClaimModelObject.ClaimID = claimsData.ClaimID;
+                                            ClaimModelObject.ClaimForm = claimsData.Title;
+                                            ClaimModelObject.Status = claimsData.CurrentStatus;
+                                            if (claimsData.FormAStatusDetails != null)
+                                            {
+                                                ClaimModelObject.LastUpdated = claimsData.FormAStatusDetails[0].UserName;
+                                                ClaimModelObject.LastModifiedDate = claimsData.FormAStatusDetails[0].UpdatedDate;
+                                            }
+                                            if (claimsData.NameOfSpouse != null)
+                                            {
+                                                claimsData.NameOfSpouseJsonString = JsonConvert.SerializeObject(claimsData.NameOfSpouse);
+                                            }
+                                            if (claimsData.NameOfOtherMember != null)
+                                            {
+                                                claimsData.NameOfOtherMemberJsonString = JsonConvert.SerializeObject(claimsData.NameOfOtherMember);
+                                            }
+                                            if (claimsData.Habitation != null)
+                                            {
+                                                claimsData.HabitationJsonString = JsonConvert.SerializeObject(claimsData.Habitation);
+                                            }
+                                            if (claimsData.Cultivation != null)
+                                            {
+                                                claimsData.CultivationJsonString = JsonConvert.SerializeObject(claimsData.Cultivation);
+                                            }
+                                            if (claimsData.DisputedLands != null)
+                                            {
+                                                claimsData.DisputedLandsJsonString = JsonConvert.SerializeObject(claimsData.DisputedLands);
+                                            }
+                                            if (claimsData.PattaLeasesGrants != null)
+                                            {
+                                                claimsData.PattaLeasesGrantsJsonString = JsonConvert.SerializeObject(claimsData.PattaLeasesGrants);
+                                            }
+                                            if (claimsData.LandForInSitu != null)
+                                            {
+                                                claimsData.LandForInSituJsonString = JsonConvert.SerializeObject(claimsData.LandForInSitu);
+                                            }
+                                            if (claimsData.LandDisplacedWithoutLandCompensation != null)
+                                            {
+                                                claimsData.LandDisplacedWithoutLandCompensationJsonString = JsonConvert.SerializeObject(claimsData.LandDisplacedWithoutLandCompensation);
+                                            }
+                                            if (claimsData.ExtendOfForestLandInForestVillages != null)
+                                            {
+                                                claimsData.ExtendOfForestLandInForestVillagesJsonString = JsonConvert.SerializeObject(claimsData.ExtendOfForestLandInForestVillages);
+                                            }
+                                            if (claimsData.OtherTraditionalRight != null)
+                                            {
+                                                claimsData.OtherTraditionalRightsJsonString = JsonConvert.SerializeObject(claimsData.OtherTraditionalRight);
+                                            }
+                                            if (claimsData.ListOfEvidence != null)
+                                            {
+                                                claimsData.ListOfEvidenceJsonString = JsonConvert.SerializeObject(claimsData.ListOfEvidence);
+                                            }
+                                            claimsData.FeedbackJsonString = JsonConvert.SerializeObject(claimsData.Feedback);
+                                            await new DatabaseHandler().saveClaimItem<ClaimModel>(ClaimModelObject);
+                                            await new DatabaseHandler().saveClaimItem<FormADetailModel>(claimsData);
+
+                                            foreach (var StatusItems in claimsData.FormAStatusDetails)
+                                            {
+                                                StatusItems.FormType = Constant.FormAText;
+                                                StatusItems.ClaimID = claimsData.ClaimID;
+
+                                                await new DatabaseHandler().saveStatusItem<StatusDetails>(StatusItems);
+                                            }
+
+                                        }
+                                    }
+                            }
+                            
+
+                            #region Form A attachment database
+                            #endregion
+                        }
+                        #endregion
+                        #region Form B data consumption 
+                        if (ClaimFormJsonObject.data.body.FormB != null)
+                        {
+                            if (ClaimFormJsonObject.data.body.FormB.FormBList != null)
+                            {
+                                var ClaimsJsonDataString = JObject.Parse(ClaimsJsonData);
+                                var Jobj = ClaimsJsonDataString["data"];
+                                    //  var ClaimsJsonDataResult = Jobj["body"]["Form B"]["StatusLabel"].ToString();
+                                    // CrossSettings.Current.AddOrUpdateValue("StatusB", ClaimsJsonDataResult);
+
+                                    lock (ClaimFormJsonObject.data.body.FormB.FormBList)
+                                    {
+                                        foreach (var claimsData in ClaimFormJsonObject.data.body.FormB.FormBList)
+                                        {
+                                            ClaimModelObject.FormType = Constant.FormBText;
+                                            ClaimModelObject.ClaimID = claimsData.ClaimID;
+                                            ClaimModelObject.ClaimForm = claimsData.Title;
+                                            ClaimModelObject.Status = claimsData.CurrentStatus;
+                                            claimsData.StatusLabelJson = JsonConvert.SerializeObject(claimsData.StatusLabel);
+                                            if (claimsData.FormBStatusDetails != null)
+                                            {
+                                                ClaimModelObject.LastUpdated = claimsData.FormBStatusDetails[0].UserName;
+                                                ClaimModelObject.LastModifiedDate = claimsData.FormBStatusDetails[0].UpdatedDate;
+                                            }
+                                            if (claimsData.NistarCommunityRights != null)
+                                            {
+                                                claimsData.NistarCommunityRightsJsonString = JsonConvert.SerializeObject(claimsData.NistarCommunityRights);
+                                            }
+                                            if (claimsData.RightsOverMinor != null)
+                                            {
+                                                claimsData.RightsOverMinorJsonString = JsonConvert.SerializeObject(claimsData.RightsOverMinor);
+                                            }
+                                            if (claimsData.CommunityRights != null)
+                                            {
+                                                claimsData.CommunityRightsJsonString = JsonConvert.SerializeObject(claimsData.CommunityRights);
+                                            }
+                                            if (claimsData.Grazing != null)
+                                            {
+                                                claimsData.GrazingJsonString = JsonConvert.SerializeObject(claimsData.Grazing);
+                                            }
+                                            if (claimsData.CommunityTenures != null)
+                                            {
+                                                claimsData.CommunityTenuresJsonString = JsonConvert.SerializeObject(claimsData.CommunityTenures);
+                                            }
+                                            if (claimsData.RightToAccessBiodiversity != null)
+                                            {
+                                                claimsData.RightToAccessBiodiversityJsonString = JsonConvert.SerializeObject(claimsData.RightToAccessBiodiversity);
+                                            }
+                                            if (claimsData.TraditionalResource != null)
+                                            {
+                                                claimsData.TraditionalResourceJsonString = JsonConvert.SerializeObject(claimsData.TraditionalResource);
+                                            }
+                                            if (claimsData.OtherTraditionalRight != null)
+                                            {
+                                                claimsData.OtherTraditionalRightJsonString = JsonConvert.SerializeObject(claimsData.OtherTraditionalRight);
+                                            }
+                                            if (claimsData.Entitlements != null)
+                                            {
+                                                claimsData.EntitlementsJsonString = JsonConvert.SerializeObject(claimsData.Entitlements);
+                                            }
+                                            if (claimsData.ListOfEvidence != null)
+                                            {
+                                                claimsData.ListOfEvidenceJsonString = JsonConvert.SerializeObject(claimsData.ListOfEvidence);
+                                            }
+                                            claimsData.InformationNotesJsonString = JsonConvert.SerializeObject(claimsData.InformationNotes);
+                                            await new DatabaseHandler().saveClaimItem<ClaimModel>(ClaimModelObject);
+                                            await new DatabaseHandler().saveClaimItem<FormBDetailModel>(claimsData);
+
+
+                                            foreach (var StatusItems in claimsData.FormBStatusDetails)
+                                            {
+                                                StatusItems.FormType = Constant.FormAText;
+                                                StatusItems.ClaimID = claimsData.ClaimID;
+
+                                                await new DatabaseHandler().saveStatusItem<StatusDetails>(StatusItems);
+                                            }
+                                        }
+                                    }
+                            }
+                          
+
+
+                        }
+                        #endregion
+                        #region Form C data consumption 
+                        if (ClaimFormJsonObject.data.body.FormC != null)
+                        {
+                            if (ClaimFormJsonObject.data.body.FormC.FormCList != null)
+                            {
+                                var ClaimsJsonDataString = JObject.Parse(ClaimsJsonData);
+                                var Jobj = ClaimsJsonDataString["data"];
+                                    //   var ClaimsJsonDataResult = Jobj["body"]["Form C"]["StatusLabel"].ToString();
+                                    //    CrossSettings.Current.AddOrUpdateValue("StatusC", ClaimsJsonDataResult);
+                                    lock (ClaimFormJsonObject.data.body.FormC.FormCList)
+                                    {
+                                        foreach (var claimsData in ClaimFormJsonObject.data.body.FormC.FormCList)
+                                        {
+                                            ClaimModelObject.FormType = Constant.FormCText;
+                                            ClaimModelObject.ClaimID = claimsData.ClaimID;
+                                            ClaimModelObject.ClaimForm = claimsData.Title;
+                                            ClaimModelObject.Status = claimsData.CurrentStatus;
+                                            claimsData.StatusLabelJson = JsonConvert.SerializeObject(claimsData.StatusLabel);
+                                            claimsData.BorderingVillageJsonString = JsonConvert.SerializeObject(claimsData.BorderingVillages);
+                                            claimsData.GramSabhaMemberJsonString = JsonConvert.SerializeObject(claimsData.GramSabhaMember);
+                                            claimsData.AreaDescriptionJsonString = JsonConvert.SerializeObject(claimsData.AreaDescription);
+                                            claimsData.InformationNotesJsonString = JsonConvert.SerializeObject(claimsData.InformationNotes);
+                                            if (claimsData.FormCStatusDetails != null)
+                                            {
+                                                ClaimModelObject.LastUpdated = claimsData.FormCStatusDetails[0].UserName;
+                                                ClaimModelObject.LastModifiedDate = claimsData.FormCStatusDetails[0].UpdatedDate;
+                                            }
+                                            if (claimsData.ListOfEvidence != null)
+                                            {
+                                                claimsData.ListOfEvidenceJsonString = JsonConvert.SerializeObject(claimsData.ListOfEvidence);
+                                            }
+                                            await new DatabaseHandler().saveClaimItem<ClaimModel>(ClaimModelObject);
+                                            await new DatabaseHandler().saveClaimItem<FormCDetailModel>(claimsData);
+
+                                            foreach (var StatusItems in claimsData.FormCStatusDetails)
+                                            {
+                                                StatusItems.FormType = Constant.FormAText;
+                                                StatusItems.ClaimID = claimsData.ClaimID;
+
+                                                await new DatabaseHandler().saveStatusItem<StatusDetails>(StatusItems);
+
+                                            }
+                                        }
+                                    }
+                            }
+                           
+
+                        }
+                        #endregion
+
+                        CrossSettings.Current.AddOrUpdateValue("TimeStamp", Convert.ToString(UtilityFunction.ConvertToUnixTimestamp(DateTime.UtcNow)));
+                    }
+                        
+                            UtilityFunction.ToastMessage(UtilityFunction.GetLanguageTextByCode( Constant.DataSyncComplete));
+                        
+                }
+                else
+                {                        
+                            UtilityFunction.ToastMessage(UtilityFunction.GetLanguageTextByCode(Constant.DataSyncComplete));
+                        
+                }
+                    #endregion
+                    Pager = Pager + 50;
+                } while (Pager < TotalCount);
+            }
+            catch (Exception ex)
+            {
+                UtilityFunction.ToastMessage(ex.Message);
+
+            }
+             
+                   
+
+        }
+
+        #endregion
+
+
+
+        //public static void AnimationSpark()
+        //{
+        //    if (Device.RuntimePlatform == Device.Android)
+        //    {
+        //        DependencyService.Get<IFireWorkAnimation>().BirthDayAnimation();
+        //    }
+
+        //}
+        //public async static Task<string> GetProfileImage(string UserEmailId)
+        //{
+        //    Stream currentUserPhotoStream = null;
+        //    ImageSource UserProfileImage = null;
+        //    string Base64ProfileImage = Constant.DefaultProfileImage;
+        //    var graphClient = AuthenticationHelper.GetAuthenticatedClient();
+        //    try
+        //    {
+
+        //        if (currentUserPhotoStream == null)
+        //        {
+        //            //Task.Run(async () => {
+        //            currentUserPhotoStream = await graphClient.Users[UserEmailId].Photo.Content.Request().GetAsync();
+        //            if (currentUserPhotoStream != null)
+        //            {
+        //                MemoryStream memoryStream = new MemoryStream();
+        //                currentUserPhotoStream.CopyTo(memoryStream);
+        //                UserProfileImage = ImageSource.FromStream(() => new MemoryStream(memoryStream.ToArray()));
+        //                byte[] imageByte = memoryStream.ToArray();
+        //                Base64ProfileImage = Convert.ToBase64String(imageByte);
+        //                CrossSettings.Current.AddOrUpdateValue(Constant.DefaultProfileImageKey, Base64ProfileImage);
+        //            }
+        //            else
+        //            {
+        //                Base64ProfileImage = Constant.DefaultProfileImage;
+        //                CrossSettings.Current.AddOrUpdateValue(Constant.DefaultProfileImageKey, Base64ProfileImage);
+        //            }
+        //            // });
+
+        //            return Base64ProfileImage;
+        //        }
+        //        else
+        //        {
+        //            return Base64ProfileImage;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        UserProfileImage = Constant.DefaultProfileImage;
+        //        CrossSettings.Current.AddOrUpdateValue(Constant.DefaultProfileImageKey, Base64ProfileImage);
+        //        return Base64ProfileImage;
+        //    }
+        //}
+    }
