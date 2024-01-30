@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MobileApplicationOFRA.DataAccessLayer;
-using MobileApplicationOFRA.Model.MultilanguageModel;
-using MobileApplicationOFRA.Utility;
+
 using Plugin.Settings;
 
-namespace MobileApplicationOFRA.MultiLanguage
+namespace namespace.MultiLanguage
 {
     public class L18n
     {
