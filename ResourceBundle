@@ -1,0 +1,31 @@
+[Table("ResourceBundle")]
+    public class ResourceBundle : ILanguageKey, ILanguageID
+    {
+
+        [JsonProperty(PropertyName = "languageKey")]
+
+        public string languageKey { get; set; }
+        [JsonProperty(PropertyName = "languageID")]
+
+        public string language_id { get; set; }
+        [JsonProperty(PropertyName = "languageText")]
+        public string text { get; set; }
+        [JsonProperty(PropertyName = "updatedDate")]
+        public string last_update_ts { get; set; }
+
+        [PrimaryKey][AutoIncrement]
+        public int ID { get; set; }
+    }
+
+    public class LanguageSelectionModel
+    {
+        public string languageID { get; set; }
+        public string languageText { get; set; }
+
+        public string DisplayImage { get; set; }
+    }
+
+    public class LanguagePageServiceOutputInfo
+    {
+        public List<ResourceBundle> label_list { get; set; }
+    }
