@@ -1,0 +1,178 @@
+ 
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Windows.Input;
+ 
+using static namespace.Utility.UtilityFunction;
+
+namespace namespace.ViewModel
+{
+    public class CommonAlertPopupViewModel : INotifyPropertyChanged
+    {
+        #region Variable
+        OncompleteCallBack AcceptCallBack { get; set; }
+        string OnSelectValue { get; set; }
+
+        private string _closetext;
+        public string CloseText
+        {
+            get { return _closetext; }
+            set
+            {
+                _closetext = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _applytext;
+        public string ApplyText
+        {
+            get { return _applytext; }
+            set
+            {
+                _applytext = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+
+        public string label { get; set; }
+
+        private bool _showapplybutton;
+        public bool ShowApplyButton
+        {
+            get { return _showapplybutton; }
+            set
+            {
+                _showapplybutton = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+
+        private bool _showclosebutton;
+        public bool ShowCloseButton
+        {
+            get { return _showclosebutton; }
+            set
+            {
+                _showclosebutton = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+
+        private string _messageTitle;
+        public string MessageTitle
+        {
+            get { return _messageTitle; }
+            set
+            {
+                _messageTitle = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+
+        private string _message;
+        public string Message
+        {
+            get { return _message; }
+            set
+            {
+                _message = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+
+        #endregion
+
+        #region Command
+        public ICommand CancelPopupCommand { get; set; }
+        public ICommand ApplyPopupCommand { get; set; }
+
+         
+        #endregion
+
+      
+        public CommonAlertPopupViewModel(string label,string ApplyText = null, string CloseText =null, OncompleteCallBack CompleteAlertHandler = null, string MessageTitle=null)
+        {
+            ApplyPopupCommand = new Command(ApplyPopup);
+            CancelPopupCommand = new Command(ClosePopup);
+            Message = label;
+            AcceptCallBack = CompleteAlertHandler;
+            //label = "No Documents Found!";
+            this.ApplyText = ApplyText;
+            this.CloseText = CloseText;
+            ShowApplyButton = false;
+            ShowCloseButton = false;
+            if(MessageTitle!=null)
+            {
+                this.MessageTitle= MessageTitle;
+            }
+            if (this.ApplyText != null)
+            {
+                ShowApplyButton = true;
+            }
+            else
+            {
+                ShowApplyButton = false;
+
+            }
+
+            if (this.CloseText != null)
+            {
+                ShowCloseButton = true;
+            }
+            else
+            {
+                ShowCloseButton = false;
+
+            }
+
+        }
+        public void ApplyPopup()
+        {
+            if (AcceptCallBack != null)
+            {
+                try
+                {
+
+                    AcceptCallBack("Yes", true);
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+            
+            Task.Run(async () => {
+                //await PopupNavigation.Instance.PopAsync(true);
+            });
+        }
+        public void ClosePopup()
+        {
+            Task.Run(async () => {
+                if (AcceptCallBack != null)
+                {
+                    AcceptCallBack("No", true);
+                }
+                await PopupNavigation.Instance.PopAsync(true);
+            });
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName]string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs((propertyName)));
+        }
+    }
+   
+}
