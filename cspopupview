@@ -1,0 +1,72 @@
+  <Frame  CornerRadius="5"
+                    VerticalOptions="CenterAndExpand"
+                    HorizontalOptions="CenterAndExpand"
+                    Padding="0">
+                <StackLayout Spacing="0">
+                    <Grid HorizontalOptions="FillAndExpand"
+                          VerticalOptions="FillAndExpand"
+                          RowSpacing="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                    
+
+                       
+                            <StackLayout Grid.Row="1"
+                                    Grid.ColumnSpan="2"
+                                         Orientation="Vertical"
+                                         Spacing="0"
+                                         HorizontalOptions="FillAndExpand"
+                                         VerticalOptions="FillAndExpand"
+                                         Margin="10,10,10,0">
+                                <Frame CornerRadius="{OnPlatform Android=100,iOS=50}" BackgroundColor="#24C3B0" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center" >
+                                <Image WidthRequest="50" HeightRequest="50" 
+                                                                  Source="updateicon.png"
+                                                                  HorizontalOptions="Center" Margin="0"/>
+                                    </Frame>
+                                    <Label  
+                               Text="{Binding MessageTitle}"
+                               TextColor="#212529"
+                               BackgroundColor="White"
+                                        FontAttributes="Bold"
+                               FontSize="22"
+                             
+                               Margin="0,10,0,5"
+                               HorizontalOptions="Center"
+                               VerticalOptions="FillAndExpand"/>
+                                <Label Text="{Binding Message}" TextType="Html" TextColor="#212529"
+                                       FontSize="16"  
+                                       Margin="15,10,15,15"
+                                       HorizontalTextAlignment="Center"
+                                       VerticalOptions="FillAndExpand"/>
+                            </StackLayout>
+                        
+                    
+
+                      
+                            <Grid Margin="0,0,0,10" ColumnDefinitions="10,*,10" Grid.Row="2" Grid.ColumnSpan="2">
+                            
+
+                            <Button Grid.Column="1" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"
+                                    Text="{Binding ApplyText}" TextColor="#FFFFFF"
+                                    IsVisible="{Binding ShowApplyButton}"
+                                    CornerRadius="5"
+                                    BackgroundColor="#4361EE"
+                                   
+                                    Command="{Binding ApplyPopupCommand}">
+                            </Button>
+
+                            </Grid>
+
+                    
+
+                    </Grid>
+                </StackLayout>
+            </Frame>
